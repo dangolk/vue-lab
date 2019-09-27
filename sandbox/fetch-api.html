@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Vue App</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+      integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+      crossorigin="anonymous"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+      integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+      integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body class="container mt-4">
+    <div id="app">
+      <nav class="navbar navbar-light bg-light fixed-top"
+           v-if="cart.length > 0">
+        <div class="navbar-text ml-auto">
+          <b>cart:</b>
+          <span class="badge badge-pill badge-success">{{ cart.length }}</span>
+        </div>
+      </nav>
+
+      <div class="form-inline mr-auto mt-5">
+        <label class="font-weight-bold mr-2" for="formMax">max</label>
+        <input
+          type="text"
+          id="formMax"
+          class="form-control w-25"
+          v-model="maximum"
+        />
+      </div>
+      <input
+        type="range"
+        class="custom-range"
+        min="0"
+        max="200"
+        v-model="maximum"
+      />
+      <div
+        class="row d-flex mb-3 align-items-center"
+        v-for="item in products"
+        v-if="item.price<=Number(maximum)"
+      >
+        <div class="col-1 m-auto">
+          <button class="btn btn-info"
+                  v-on:click="addItem(item)"
+          >+</button>
+        </div>
+        <div class="col-4">
+          <img class="img-fluid d-block" :src="item.image" :alt="item.name" />
+        </div>
+        <div class="col">
+          <h3 class="text-info">{{ item.name }}</h3>
+          <p class="mb-0">{{ item.description }}</p>
+          <div class="h5 float-right">${{ Number(item.price) }}</div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+    var app = new Vue({
+      el: "#app",
+      data: {
+        maximum: 99,
+        products: null,
+        cart: []
+      },
+      methods: {
+        addItem: function(product){
+          this.cart.push(product);
+        }
+      },
+      mounted: function() {
+        fetch("https://hplussport.com/api/products/order/price")
+          .then(response => response.json())
+          .then(data => {
+            this.products = data;
+          });
+      }
+    });
+  </script>
+</html>

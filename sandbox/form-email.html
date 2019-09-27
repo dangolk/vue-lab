@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Vue App</title>
+
+    <!-- Loading External Scripts and JS Libraries -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+      integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+      crossorigin="anonymous"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+      integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+      integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+      [v-cloak] {
+        display: none;
+      }
+      h .highlight {
+        border: solid 3px red;
+        color: red;
+      }
+
+      .shooting-star-enter,
+      .shooting-star-leave-to {
+        transform: translateX(150px) rotate(90deg);
+        opacity: 0;
+      }
+
+      .shooting-star-enter-active,
+      .shooting-star-leave-active {
+        transition: all 0.5s ease;
+      }
+
+      .neo-list-leave-to,
+      .neo-list-enter {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      .neo-list-enter-active,
+      .neo-list-leave-active {
+        transition: all 0.5s linear;
+      }
+
+      .spin-enter-active {
+        animation: spin-steps 2s;
+      }
+
+      @keyframes spin-steps {
+        0% {
+          transform: scale(1) rotate(0);
+        }
+        50% {
+          transform: scale(3) rotate(360deg);
+        }
+        100% {
+          transform: scale(1) rotate(1080deg);
+        }
+      }
+    </style>
+  </head>
+  <body class="container mt-4">
+    <!-- Vue Elements start here -->
+
+    <div id="app">
+      <div class="container">
+        <div class="card mt-5">
+          <h2 class="card-header">
+            Near-Earth
+            <transition name="spin" appear>
+              <!-- <span style="display:inline-block">Objects</span> -->
+
+              <img
+                src="http://cdn.onlinewebfonts.com/svg/img_509782.png"
+                class="img-fluid rounded"
+                alt="Alienware"
+                height="50px"
+                width="50px"
+              />
+            </transition>
+          </h2>
+          <transition name="shooting-star">
+            <div class="m3" v-cloak v-if="asteroidLength > 0 && showSummary">
+              <p>
+                showing:
+                <span class="badge badge-pill badge-success">
+                  {{ asteroidLength }} items
+                </span>
+                Asteroid with shortest Miss Distance:
+                <span class="badge badge-pill badge-success">
+                  {{ shortestRoid }}
+                </span>
+              </p>
+            </div>
+          </transition>
+          <div class="m-3">
+            <a href="#" @click="showSummary = !showSummary"
+              >Show/Hide Summary</a
+            >
+          </div>
+          <table
+            class="table table-striped"
+            :class="[{'table-dark' : false}, 'table-bordered']"
+          >
+            <thead class="thead-light">
+              <th>#</th>
+              <th>Name</th>
+              <th>Close Approach Date</th>
+              <th>Miss Distance</th>
+              <th>Remove</th>
+            </thead>
+            <tbody is="transition-group" v-cloak name="neo-list">
+              <tr
+                v-for="(asteroid, index) in asteroids"
+                :key="asteroid.neo_reference_id"
+                :style="getRowStyle(asteroid)"
+                style="color:green"
+                :class="{highlight:false, 'shadow-sm' : true}"
+              >
+                <td>{{ index + 1 }}</td>
+                <td>{{ asteroid.name }}</td>
+                <td>{{ getCloseApproachDate(asteroid) }}</td>
+                <td>
+                  <ul v-if="asteroid.close_approach_data.length > 0">
+                    <li
+                      v-for="(value , key, index) in asteroid.close_approach_data[0].miss_distance"
+                    >
+                      {{ key }} : {{ value }}
+                    </li>
+                  </ul>
+                </td>
+                <td>
+                  <button @click="remove(index)" class="btn btn-warning">
+                    remove
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vue Elements stop here -->
+  </body>
+  <script>
+    // Vue Scripting starts here
+    var vm = new Vue({
+      el: "#app",
+      data: {
+        imgSrc: "",
+        imgTitle: "",
+        asteroids: [],
+        showSummary: true
+      },
+      computed: {
+        asteroidLength: function() {
+          return this.asteroids.length;
+        },
+        shortestRoid: function() {
+          var R = 0;
+          for (asteroid of this.asteroids) {
+            if (asteroid.close_approach_data.length > 0) {
+              R =
+                Number(asteroid.close_approach_data[0].miss_distance.miles) > R
+                  ? Number(
+                      asteroid.close_approach_data[0].miss_distance["miles"]
+                    )
+                  : R;
+            }
+          }
+          return R;
+        }
+      },
+      created: function() {
+        this.fetchAsteroids();
+      },
+      methods: {
+        fetchApod: function() {
+          var nasaApiKey = "CXgIrMbIWeKhLmvvogvA5rW5sjP3MFFW9dOdVdgf";
+          var url = "https://api.nasa.gov/planetary/apod?api_key=" + nasaApiKey;
+          axios.get(url).then(function(res) {
+            vm.imgSrc = res.data.url;
+            vm.imgTitle = res.data.title;
+          });
+        },
+        fetchAsteroids: function() {
+          var nasaApiKey = "CXgIrMbIWeKhLmvvogvA5rW5sjP3MFFW9dOdVdgf";
+          var url =
+            "https://api.nasa.gov/neo/rest/v1/neo/browse?api_key=" + nasaApiKey;
+          // var url = "http://737798.youcanlearnit.net/neos.json";
+          axios.get(url).then(function(res) {
+            vm.asteroids = res.data.near_earth_objects.slice(0, 10);
+          });
+        },
+        getCloseApproachDate: function(asteroid) {
+          if (asteroid.close_approach_data.length > 0) {
+            return asteroid.close_approach_data[0].close_approach_date;
+          }
+          return "N/A";
+        },
+        remove: function(index) {
+          this.asteroids.splice(index, 1);
+        },
+        getRowStyle: function(asteroid) {
+          if (asteroid.close_approach_data.length == 0) {
+            return {
+              border: "solid 3px red",
+              color: "red"
+            };
+          }
+        }
+      }
+    });
+
+    // Vue Scripting stops here
+  </script>
+</html>
